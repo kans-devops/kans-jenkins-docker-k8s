@@ -1,0 +1,28 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("your-dockerhub-username/demo-app:latest", "../docker")
+                }
+            }
+        }
+        stage('Push to Docker Hub') {
+            steps {
+                withDockerRegistry([credentialsId: 'docker-hub-creds', url: '']) {
+                    script {
+                        docker.image("your-dockerhub-username/demo-app:latest").push()
+                    }
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f ../k8s/deployment.yaml'
+                sh 'kubectl apply -f ../k8s/service.yaml'
+            }
+        }
+    }
+}
